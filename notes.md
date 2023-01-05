@@ -711,7 +711,175 @@ ademas de obtener ifo de forma pasiva, tmb se pueden usar para:
 INTERCEPTACION
 -------------------------------------------------------------------------------
 
+#### sniffing
+obtener paqueteria de maquinas ajenas
+ademas se puede usar para:
+- deteccion anomalias en la red (tráfico, cabeceras)
+- protocolos (si ICMP esta dehabilitado...)
+ejemplos: SNORT & SURICATA
 
+#### Virtual LAN
+permite estrablecer tantas redes logicas como se quiera dentro de una red física
+- MAC VLAN:
+- IP VLAN:
+- 802.1q (TAGGING VLAN) (dot1q): añade un tag a una trama para saber a que vlan pertenece
+default tag: VLAN1
+
+#### conceptos de red            
+ROUTER (capa 3, IP): 
+SWITCH (capa 2, MAC): rediccionamiento (distribuye paquetes exclusivamente a su destinatario)
+    se suelen usar para conseguir redundancia
+dot1q permite cambiar el modo de funcionamiento de las bocas del switch
+- access: comunicacion horizontal
+- trunk: comunicacion vertical (utiliza Virtual Trunking Protocol o DTP)
+    - DTP -> CISCO
+- dynamic: redes LAN que aparecen y desaparecen en el tiempo
+
+HUB (capa 2, MAC): amplificador (distribuye paquetes por toda la red conectada al hub)
+
+
+PROBLEMAS:
+SWITCH SPOOFING:
+DOUBLE TAGGING: VLAN20(VLAN10(PACKAGE))
+
+
+#### spanning tree protocol
+decision de enrutamiento para evitar que un paquete acceda a internet sin quedarse dando vueltas o teniendo conflictos)
+
+los switches utilizan un tipo de paqueteria especial para el STP (Bridge Protocol Data Units)
+- 12 campos (BRIDGE ID, ROOT ID, ROOT PATH COST)
+y un algoritmo de decision llamado Spanning Tree Algorithm
+- establecer switch predominante -> todos contra todos mandando paquetes BPDU -> bridge = root id = yo, root path -> cuanto me cuesta llegar a sitio determinado
+```
+BRIDGE ID= [4bits] + [12bits] + [48bits]
+            priority  VLANID      MAC
+```
+el root id se va cambiando con el root de valor mas bajo (más importante)
+
+
+#### redundancia
+se suelen utilizar switches para conseguirla
+tmb se suelen conectar entre si
+
+#### STP
+cuando hay redundancia fisica, se intenta que no haya redundancia logica (desbloquear caminos de forma logica)
+- no se actualiza el resultado hasta que se reconfigure la topologia (es estatico)
+- para que sea dinamico existe el Rapid Spanning Tree Protocol
+
+
+PELIGRO: 
+- alguien se podria convertir en el root bridge poniendo valores mas bajos
+- se inundan todos los canalaes al hacer una BPDU-TCN 
+- PDU-TopologyChangeNotification <-> se ha cambiado la topologia, se tiene que volver a ejecutar el algoritmo 
+
+(entiendase que esto es referido a la comunicacion vertical)
+
+
+SOLUCIONES:
+- ROOT BRIDGE WAR -> en caso de que existan conexiones estaticas nuevas, no se permite comunicacion  
+- BPDU GUARD -> especificar puertos que admiten tramas BPDU de entrada
+- BPDU FILTER -> especificar puertos que admiten tramas BPDU  de salida
+
+YERSENIA -> STP VTP DTP 802.1q DHCP (identificar y manipular)
+
+
+#### MAC FLOODING
+llenar tabla de descubrimiento de MACs para que no pueda guardar mas
+puede causar 2 cosas:
+- switch inhabilitado
+- hub 
+
+lo mismo puede pasar con los routers si tienen activada la directiva ICMP REDIRECT (se usa para indicar que existe una ruta mejor a la actual para transmitir paquetes)
+
+
+#### PORT STEALING
+los switches utilizan una tabla para los macs (CAM TABLE)
+
+- MACS DUPLICADAS: -> los paquetes llegan a mas de un sitio
+no suele tener defensas: han aparecido agunas 
+- PORT SECURITY: 1 a 1 puerto/mac
+- PORT MIRRORING/SPAM: analisis de trafico
+- PORT BONDING/TRUNKING: 
+    - aumento ancho de banda
+    - aumento tolerancia a fallos
+    - balanceo de carga 
+    - tipos de bonding:
+        - modo 0: round robin
+        - modo 1: backup
+        - modo 2: balance XOR
+        - modo 3: broadcast 
+        - modo 4: dynamic link aggregation
+        - modo 5: transmission load
+        - modo 6: active load
+
+#### DHCP SNOOPING
+si no conoce al nuevo DHCP SERVER, no permite (DHCP OFFER, DHCP ACK)
+
+dentro de la maquina atacada la cmabiamos la mac del router por la nuestra
+ARPON:
+    - SARPI -> no dhcp
+    - DARPI |  si dhcp (lista dinamica con 2 valores importantes: TIMEOUT + CACHE)
+    - HARPI |  (2 listas simultaneas)
+
+#### NDP spoofing 
+<-> ARP pa 6
+- PARASITE6
+
+DNS SPOOFING
+DNS CACHE POISONING
+
+soluciones: 
+- DNS SEC (implementacion que asegura integridad & autenticidad de la informacion)
+    8.8.8.8 p.ej.
+- Dns Over Tls -> pasar DNS por tcp
+
+
+#### interceptar informacion en una red wifi: 
+EVILGRADE: framework que permite (usando DNS POISONING) suplantar actualizacion de DNS de cualquier maquina
+`/etc/apt/sources.list`
+
+#### SITE-JACKING -> suplantar / modificar cookies
+
+HTML<4 todas las cookies eran texto plano
+>=5 -> web storage
+- session storage: cookie para el site actual
+- local storage: todas mis cookies
+
+#### SSL-STREAM
+MITM entre cliente y servidor, abriendo una conexion https alservidor y una http entre el cliente
+ademas se busca que el cliente crea que su conexion conmigo sea segura
+
+```
+    cliente -----|----- servidor
+                 |
+                 |
+          HTTPS> | HTTPS>
+          HTTP<  | <HTTPS
+                 |
+                 |
+                MIM
+             SSL STRIP
+```
+
+#### Security Information and Event Management (SIEM)
+sistema de recuperacion de informacion de amenazas 
+prelude()
+
+
+#### HTTP Strict Transport Security
+asegurarse que el trafico en siempre va a ser securizado (siempre manda https)
+se aporta un token de 1 año de caducidad()
+```
+   cliente      browser       server
+        HTTP >      |    HTTPS>
+                    |    < security
+                    |    HTTPS>
+       <HTTPS       |    <HTTPS
+```
+
+#### recomendaciones
+ip-forwarding -> solo routers
+ICMP-redirects... -> no aceptar
 
 
 -------------------------------------------------------------------------------
