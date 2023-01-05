@@ -519,6 +519,200 @@ certificados
 user-password
 
 
+#### crackeo wifi
+- WEP
+- WPS
+- LUPA
+- WPA
+- WPA2
+- WPA3
+
+4 way-handshake
+```
+     CLIENTE                     ROUTER
+ passw  |                           | password (Pre-Shared Key) / (EAP)
+SSID    |                           | SSID
+PMK     |                           | PMK
+        |                           |
+        |      <1.ANONCE            | ANONCE
+PTK MIC |                           |
+SNONCE  |      SNONCE+(MIC)1.       |
+        |                           | 
+        |                           | PTK, (GTK)
+        |   <3.INSTALTION+MIC+(GTK) |
+        |   4.INSTALATION+MIC>      |
+```
+
+`PTK` is used as the cypher
+
+`PMK` : pairwise master key = SSUD + hash(PSK)
+`ANONCE` : authenticator only use number
+`PTK` :  PMK + MACc + MACr + ANONCE + SNONCE
+`SNONCE` : supplicant only use number
+`MIC`: message integrity code
+
+ATAQUES
+    
+PMK = SSID + *hash(PSK)
+PTK =  PMK + *MACc + *MACr + ANONCE + SNONCE
+
+aircrack: modo monitor: escuchar todo protocolo wifi activo en 80m
+- airmon-ng -> modo monitor
+- airodump-ng ->
+- aireplay-ng -> trafico especifico
+    por ejemplo desconectar a un cliente -> reconexion automatica
+- aircrack-ng -> conseguir PSK (diccionarios)
+    - generadores: crunch (regex), the harvester (recopila posibles candidatos a diccionario)
+    - crackers: john the ripper, cain & abel, medusa, hydra, hashcat
+        - hydra, haschat best -> distributed cracking, multithreading, regex
+- airbase-ng -> |evil twin|
+        
+idea diccionarios: guarda posibilidades y paso al otro lado para comprobar si funcionan -> user+(PASS)hash
+
+#### RAINBOW TABLE
+en vez de guardar candidatos y mandar a que se ejecuten y comprueben, guardar unicamente el resultado de aplicar el hash a cada valor
+en el momento en el que unico encaje, ya se sabe directamente el resultado
+ 
+problems on 3. -> con esto se esta atacando a la ocultacion, hasta el paso 3
+krack attack > key re-installation attack
+
+no se tuvo en cuanta en que anonce y snonce son valores incrementales, si a alguien se le ocurria reenviar el tercer paquete, anonce y snonce se reinician -> todo el descifrado de informacion se deshace-> se pone todo a 0s --> el unico valor desconocido es el PSK 
+esto permite que se pierda la privacidad en la conexion wifi -> todo es accesible como texto plano
+
+
+#### WPA3
+2008 presentado, 2018 finalmente implementado, 2019 crakeado 
+    (vulneabilidad: dragon blood)
+    herramientas:
+        dragondrain -> DOS => "solucion"forzar a pasar a WPA2
+        dragontime -> jode el tiempo
+        dragonforce -> crackeo contraseñas
+        dragonslayer -> 
+protocolo dragonfly (not 3 way handshake)
+
+ROGUE ACCESS POINT ->  
+    tools -> Social Egineering Toolkit, FLUXION
+
+
+#### privacidad
+
+#### disco
+rm -> srm -> shred || scrub
+
+srm -> sobreescritura
+shred -> n sobreescrituras
+scrub -> n sobreescrituras a nivel fichero y carpeta (incluyendo nombres)
+
+SFILL -> ocultar burbujas sin datos
+
+NIVEL SWAP ->
+
+NIVEL RAM -> mimikatz (desofuscar informacion en la ram)
+
+history ->  lista de comandos 
+
+
+#### TOR The Onion Router
+user -> onion proxy -(min 3 machines)-> Directory Server (knows all internal machines) 
+pacman
+     
+funcionamiento:
+
+    all using tls() 
+    1st machine (entry relay)   <- estático (~60días)
+    2nd machine (middle relay)  <- dinámico
+    3rd machine (exit relay)    <- dinámico 
+
+encapsulado paquetes:
+- maquina original:
+(ip_1+key_1(ip_2+key_2(ip_3+key_3(paquete original))))
+- maquina 1
+ip_2+key_2(ip_3+key_3(paquete original))
+- maquina 2
+ip_3+key_3(paquete original)
+- maquina 3
+paquete original
+
+TAILS       -> sistema operativo completo que pasa por la red tor de forma nativa
+TOR STEAM   -> libreria de python ""
+TOR SOCKS   -> socks que solo pasa ""
+TORTILLA    -> implementacion de socks para maquinas virtuales
+
+internet (10%)
+
+#### deep web
+web no indexada (uris, servicios)
+
+#### dark web
+(1%) deep + autenticacion 
+
+#### dark net
+soporte a la dark web
+
+.onion -> accesibles desde tor o 
+
+sha.1(url).onion
+"".i2p
+.
+.
+.
+
+
+I2P 
+freenet
+zeronet
+
+#### inproxy
+(solo se puede acceder a elementos dentro de la propia web) vpn cerrada [I2P]
+##### outproxy
+(se puede acceder a redes externas) [TOR]
+
+el navegador es el mayor peligro para la privacidad
+- adblock
+- blockscript
+- blocksite
+- no-miner (ded)
+- https everywhere
+- cookie editor
+
+busquedas privadas      -> 3º no sabe mis busquedas
+bloquear rastreadores   
+asegura encriptacion entre sitios
+
+#### port tunneling 
+incorporar servicio o protocolo dentro de otro diferente
+se puede saltar firewalls
+ssh tunneling ejemplo mas comun
+puede tener 3 vertientes
+- local: atravesar un firefox metiendo un protocolo dentro de otro (guardar un salto en uno de mis puertos)
+- remoto: local a la inversa()
+    ```
+        /etc/sshd_config
+            AllowTcpForwarding = "yes"
+            GATEWAYPORTS = "yes"
+    ```
+- dinamico: me conecto a un ssh en el exterior que se cominica con el resto aqui tengo un proxy socks
+
+#### port knocking 
+no tener abierto todo el rato todos los puertos : definir cerraduras para ciertos puertos
+
+#### sniffers
+ademas de obtener ifo de forma pasiva, tmb se pueden usar para:
+- deteccion anomalias en la red (tráfico, cabeceras)
+- protocolos (si ICMP esta dehabilitado...)
+    ```
+    IDSs: 
+        - SNORT:    sniffer tocho
+        - SURICATA: sniffer tocho
+    ```
+
+
+-------------------------------------------------------------------------------
+INTERCEPTACION
+-------------------------------------------------------------------------------
+
+
+
 
 -------------------------------------------------------------------------------
 FIREWALLS
@@ -605,6 +799,7 @@ modulos:
     - --commlimit-daddr
 - conntrack: controlar las conexiones
     - --conntrack -cstate [NEW|INVALID|RELATED|ESTABLISHED]
+
 
 -------------------------------------------------------------------------------
 ## CERTIFICATION
