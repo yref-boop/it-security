@@ -519,3 +519,183 @@ certificados
 user-password
 
 
+
+-------------------------------------------------------------------------------
+FIREWALLS
+-------------------------------------------------------------------------------
+intermediario que actua en funcion del trafico que recibe
+usos:
+- cortafuegos
+- analisis de trafico
+- nat (paso de ips privadas a publicas)
+- marcado/tagging de paquetes 
+
+funcionamiento:
+```
+PACKET                                                               
+INCOME  PREROUTE    for me?   no       FORDWARD    POST ROUTING         OUTPUT
+--------->|  |----< decision >---------->|  |--------->|  |----------> PACKET
+                        |                               ^
+                        | yes                           |
+                        v             LOCAL             |
+                      INPUT---------> PROCESS ----->  OUTPUT
+                        |                            
+                        X
+```
+
+para poder hacer este camino el firewall tiene:
+- reglas: "operadores" de las ip tables
+    - iptables 
+        - -t -> [table: filter|mangle|] tabla por defecto => filter
+        - [A(append)|D(delete)|I(input[position])|-L(list)|-F(borrar)|-P(policy)] 
+        - INPUT -> [chain: ]
+        - acciones:
+            - -p -> protocol
+            - -s -> source IP
+            - -d -> destinattion IP
+            - -sport -> source port
+            - -dport -> destination port
+            - -i -> interface
+        - -j [ACCEPT|DROP|REJECT|log(no finalista)] -> que hacer
+
+- cadenas: agrupaciones de reglas asociadas a un punto de la comunicacion 
+  (toman decisiones en cada momento): estados del firewall
+    - input
+    - output
+    - forward
+    - pre-routing
+    - post-routing
+    cada cadena puede tener 2 tipos de politicas:
+    - permisiva: por defecto acepta todo
+    - restrictiva: por defecto dropea todo
+    en cada una de las cadenas se configuraran las reglas opuestas a su politica
+
+- tablas: agrupaciones estrategicas de las cadenas decide que hacer con un paquete sgun su naturaleza
+    - filter (input output forward)
+    - nat (prerouting forward postrouting)
+    - mangle (todas) [se encarga del tagging]
+    - raw (prerouting output) [en desuso]
+
+pasar de que te bloqueen en output
+- usar ips aun en uso (legacy ips)
+- usar vpns
+- proxy
+- TOR (.onion & normales)
+- tunneling
+
+las iptables generalmente son volatiles, para configurar de forma permanente una vez configurada, primero se:
+`iptables-save [OUTPUT_FILE]`
+`iptables-restore [OUTPUT_FILE]`
+
+in order to make it permanent, its recommended to create a service that loads on startup:
+wanted by: networking
+after: networking
+
+
+existen 2 tipos de 
+- stateless: un paquete es leido por las reglas independientemente de lo ocurrido con anterioridad
+- stateful: los paquetes mandados con anterioridad influyen en el tratado del actual
+
+modulos:
+- connlimit: restringir las conexiones
+    - --commlimit-upto N
+    - --commlimit-above  N
+    - --commlimit-mask prefix-longlt
+    - --commlimit-saddr
+    - --commlimit-daddr
+- conntrack: controlar las conexiones
+    - --conntrack -cstate [NEW|INVALID|RELATED|ESTABLISHED]
+
+-------------------------------------------------------------------------------
+## CERTIFICATION
+-------------------------------------------------------------------------------
+
+cifrado:
+- simetrico: misma clave para encriptar y desencriptar
+- asimetrico: claves distintas
+    - pública: cifra
+    - privada: descifra
+    ejemplo0: cifrado con clave publica en destino:
+        [texto](aplico publica del objetivo)---------------------> servidor (solo el objetivo tiene la privada que descifra)[texto]
+    ejemplo1: autenticidad (no repudio)
+        [texto](aplico privada del objetivo) + [TEXTO PLANO] ---------------------> servidor (puede determinarr si la privada que tengo es la correspondiente a la publica dedl servidor)
+    ejemplo2: 
+        ([texto](calculo md5)privada)+ [TEXTO PLANO] ---------------------> servidor (comprueba integridad, no repudio y atenticidad de los datos) => firma digital
+
+criptografía: ciencia encargada de los procesos de cifrado
+- clásica:
+    - sustitución
+        - monoalfabeto
+        - polialfabeto
+    - trasposición -> 
+        silex : tubito
+        - linea del mensaje
+        - linea de codificación
+- moderna:
+    - cifradores de bloques (discreto) [TCP]: 
+        1. se manda texto plano 
+        2. encriptador (depende de una clave k)
+        3. se devuelve texto encriptado
+        ejemplo: DES/AES-256
+
+    - cifradores de flujo (continuo) [UDP]:
+        1. flujo de datos
+        2. se va introduciendo el dato en el encriptador
+        3. se devuelve dato encriptado
+        ejemplo: RC4
+
+ssh: por defecto utiliza 
+- diffie-hellman ->
+$B = g^b mod p$
+    - g & p públicos
+    - $1<g<p$
+    - raiz primitiva: (g^{p-1}=1 mod p)
+
+ejemplo funcionamiento:
+|A|                 |B|
+g,p                 g,p             publicos
+a=randr()           b=randr()       privados
+x=G^a mod p         x=G^b mod p     publicos
+S=B^a mod p         S=A^b mod p     clave privada generada (anbos lados pueden cifrar)
+
+problema: como hay cambio de informacion, un MITM puede reconstruir la clave
+
+
+- rsa -> modelo de cifrado moderno de bloques 1024bits
+    p & q primos grandes
+    n = p * q
+    \Phi (n) = (p-1)(q-1)
+    1<e<\Phi (n), mcd(e,\Phi (n))=1
+    e.d = 1 mod \Phi (n)
+
+3 lagunas: 
+- 11 -> 11 (eleccion de numeros no cifrables)
+    dependen del valor de n (p*q) -> 0, 1, n-1 & otros 6
+- (paradoja del cumpleaños)
+- cifrado cíclico
+
+
+firma digital:
+1. clave_privada(documento) + clave publica [asegurar identidad]
+2. clave_privada(hash(documento)) + doc clave pública
+
+conseguimos con esto: autenticacion(clave_privada), integridad de los datos(hash), no repudio
+
+certificado digital: documento publico firmado digitalmente por entidad certificadora que recoge identidad de "algo" o "alguien"
+
+en españa entidad certificadora: FNMT
+internacionalmente: TRUST, VERISIGN, GEOTRUST
+
+los navegadores tienen la clave publica de las entidades certificadoras descargadas por defecto
+
+una maquina es entidad certificadora, otra servidor apache
+servidor pasa su clave publica para certificar
+e.c. firma con su clave publica y pasa firma a servidor apache
+se pone la clave pulica firmada como publica del apache
+
+carpeta copia claves publicas, comando detecta e instala
+host normal: usar chrome certificaciones instalar entidad certificadora añadir
+
+
+CRL certificate revocation list: entidad certificadora revoca los certificados existentes en esta lista
+
