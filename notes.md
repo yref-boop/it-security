@@ -489,5 +489,33 @@ lynix
 
 lynis show details [error code]
 
-cuantas particiones necesito
+
+## ocultacion y privacidad
+
+NAT -> ip publica en vez de privada (ocultacion)
+    estático:
+    dinamico:
+    pat: nat para puertos
+
+PROXY -> intermediario en comunicasion
+    HTTP/HTTP/S (apache)
+    ANONIMO (ocultacion)
+    TRANSPARENTE (nada)
+    ELITE
+    NOISY -> X_FOR... habilitado pero con ips no reales/ escogidas a consciencia
+    SOCKS (SOCKET SECURE) -> 
+        SOCKS4 -> TCP & insecure/no cifrada
+        SOCKS5 -> TCP/UDP & seguridad/cifrado
+    REVERSE ???
+    CACHE -> 
+        SQUID CACHE     -> X_FORWARDED_FOR //HEADERS (habilitado = transparente)
+        APACHE HTTP/S   -> RUTAS
+
+ocultacion siempre
+privacidad segun el cifrado utilizado
+
+(pre) shared key
+certificados
+user-password
+
 
