@@ -838,13 +838,6 @@ soluciones:
 EVILGRADE: framework que permite (usando DNS POISONING) suplantar actualizacion de DNS de cualquier maquina
 `/etc/apt/sources.list`
 
-#### SITE-JACKING -> suplantar / modificar cookies
-
-HTML<4 todas las cookies eran texto plano
->=5 -> web storage
-- session storage: cookie para el site actual
-- local storage: todas mis cookies
-
 #### SSL-STREAM
 MITM entre cliente y servidor, abriendo una conexion https alservidor y una http entre el cliente
 ademas se busca que el cliente crea que su conexion conmigo sea segura
@@ -880,6 +873,130 @@ se aporta un token de 1 año de caducidad()
 #### recomendaciones
 ip-forwarding -> solo routers
 ICMP-redirects... -> no aceptar
+
+#### SITE-JACKING -> suplantar / modificar cookies
+
+HTML<4 todas las cookies eran texto plano
+>=5 -> web storage
+- session storage: cookie para el site actual
+- local storage: todas mis cookies
+
+
+
+-------------------------------------------------------------------------------
+INTERRUPCION
+-------------------------------------------------------------------------------
+#### Distributed Denial Of Service (\[D\]DOS)
+corte de servicio / degradación del servicio 
+- ataques lógicos: vulnerabilidad encontrada & explotada 
+- ataques de inundacion
+    - directo
+    - reflectivo
+
+tipos de errores causados por DDOS
+- core dump
+- heap size overflow
+
+fork bomb: `:(){:|:&};:`
+```
+#!/bin/bash
+    bomb(){
+        bomb | bomb &
+    }
+    bomb
+```
+
+### ATAQUE CON AMPLIFICACION
+se utiliza un zombie al que se le manda un paquete y este manda más paquetes a una víctima
+- x2 -> TCP SYN TCP ACK
+- x254 -> PING 10.11.49.255
+si se hace un ping desde una maquina víctima a todo un segmento de red, la respuesta sera considerada una INUNDACION ICMP 
+
+### NTP (port 123) 
+servicio interno monlist -> haces 1 peticion al servidor y te devuelve una lista con 600 tuplas con todas las maquinas que han realizado conexion NTPs contra el servidor
+
+### BOT / BOTNETS  
+-  MEMCACHED
+
+### DHCP
+al un cliente enviar una peticion, el servidor responde con una oferta, dejando una de sus ips en espera, si esto se hace a gran escala, el servidor se queda sin oferta de servicio
+
+### DNS
+crear bucles (llamada al propio DNS) -> degradacion de resolucion
+te haces pasar por un DNS secundario, el DNS primario accede a que se haga un cambio de zona 
+
+### ICMP
+TTL EXPIRATION
+paquete de respuesta a que un paquete se descarte por TTL = 0
+mandando un paquete 
+
+### DEFENSAS A DDOS
+rp_filter -> verificador de ruta inversa
+comprueba si el paquete ha salido de donde dice que ha salido
+que exista enrutado completo
+`/proc/sys/net/ipv4/conf/default/rp_filter`
+- 0 -> no resolucion inversa
+- 1 -> strict mode (misma interfaz)
+- 2 -> loose mode (cualquier interfaz)
+
+traceroute -> verifica el camino tomado por el paquete 
+
+
+#### SYN FLOOD -> NO PERDER CONEXIONES
+#### SYN COOKIES
+CLIENTE         SERVIDOR
+    |      SYN>     |
+    |<SYN+ACK+Cookie|
+    |   A           |
+    |               |
+
+cookie = (IP_source +  IP_dest + Port_source + Port_dest) hash
+
+#### SYN CACHE
+PROXY -> SYN NO SON FORTUITAS
+CLIENTE     PROXY       SERVIDOR
+    |    SYN>   |           |
+    | <SYN+ACK  |           |
+    |   ACK>    |           |
+    |   DATA>   |   SYN>    |
+    |           | <SYN+ACK  |
+    |           | ACK+DATA> |
+    |           |           |
+
+                    MITM
+                     |
+
+#### DDOS WIFI
+aireplay-nc
+802.1 abcnw
+
+#### DDOS LAYER /
+inundacion directa HTTP/80
+                   HTTP/443
+
+- slowloris -> blueballing (cabecera a poco y no mandar el ultimo caracter CRF (\n))
+- slowread  -> cuando el cliente abre para read, esperar a mandar ack el maximo tiempo posible sin que salte timeout
+- slowpost  -> mandar info a server mu a poquitos
++
+- APACHE KILLER -> cabeceras fraccionadas y super puestas (apache se vuelve unpocoloco)
+
+
+### HTTPS CYPHERS:
+- SSL:
+    THC-SSL-DOS:
+    coste computacional del cifrado 15x
+- TLS:
+    THC_TLS-DOS:
+    
+
+mod security (owasp) i) readlimit ii) writelimit
+mod evasive
+mod antiloris
+
+APACHE2 CONFIG -> TIMEOUTS
+300 secs es demasiado -> 20 secs
+
+
 
 
 -------------------------------------------------------------------------------
